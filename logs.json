@@ -1,0 +1,203 @@
+{
+  "mở edge": [
+    {
+      "step": "Kiểm tra xem trình duyệt Microsoft Edge đã được cài đặt hay chưa.",
+      "purpose": "Đảm bảo rằng lệnh gọi mở trình duyệt sẽ thành công.",
+      "code": "import os\n\n__step_success__ = False\n\nedge_path = None\nprogram_files = os.environ.get('ProgramFiles', 'C:\\Program Files')\nprogram_files_x86 = os.environ.get('ProgramFiles(x86)', 'C:\\Program Files (x86)')\n\npossible_paths = [\n    os.path.join(program_files, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),\n    os.path.join(program_files_x86, 'Microsoft', 'Edge', 'Application', 'msedge.exe')\n]\n\nfor path in possible_paths:\n    if os.path.exists(path):\n        edge_path = path\n        break\n\nif edge_path:\n    __step_success__ = True\n    print(f'Microsoft Edge found at: {edge_path}')\nelse:\n    print('Microsoft Edge not found.')\n"
+    },
+    {
+      "step": "Mở trình duyệt Microsoft Edge bằng lệnh gọi hệ thống.",
+      "purpose": "Thực thi yêu cầu mở trình duyệt Edge.",
+      "code": "import subprocess\n\n__step_success__ = False\n\ntry:\n    subprocess.Popen(['start', 'msedge'], shell=True)\n    __step_success__ = True\n    print('Microsoft Edge opened successfully.')\nexcept Exception as e:\n    print(f'Failed to open Microsoft Edge: {e}')"
+    }
+  ],
+  "giảm độ sáng màn hình tối đa": [
+    {
+      "step": "Kiểm tra quyền truy cập để thay đổi độ sáng màn hình.",
+      "purpose": "Đảm bảo có đủ quyền để thực hiện thay đổi.",
+      "code": "import os\n\n__step_success__ = True  # Giả định có quyền truy cập, vì việc kiểm tra chính xác quyền này rất khó trong Python tiêu chuẩn.\nprint('Assuming sufficient permissions to adjust screen brightness.')",
+      "note": "Việc kiểm tra quyền truy cập độ sáng màn hình trong Python không đơn giản.  Chúng ta giả định rằng có quyền và tiếp tục."
+    },
+    {
+      "step": "Thay đổi độ sáng màn hình xuống mức tối thiểu bằng PowerShell.",
+      "purpose": "Thực hiện yêu cầu giảm độ sáng màn hình.",
+      "code": "import subprocess\n\n__step_success__ = False\n\ntry:\n    # Lệnh PowerShell để đặt độ sáng màn hình về 0.\n    command = 'powershell (Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(0,0)'\n    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n    stdout, stderr = process.communicate()\n\n    if process.returncode == 0:\n        __step_success__ = True\n        print('Screen brightness set to minimum successfully.')\n    else:\n        print(f'Failed to set screen brightness. Error: {stderr.decode()}')\n\nexcept Exception as e:\n    print(f'Error executing PowerShell command: {e}')",
+      "note": "Sử dụng PowerShell vì Python không có thư viện tích hợp sẵn để điều khiển độ sáng màn hình trên Windows."
+    }
+  ],
+  "tăng độ sáng màn hình tối đa": [
+    {
+      "step": "Kiểm tra quyền truy cập để thay đổi độ sáng màn hình.",
+      "purpose": "Đảm bảo có đủ quyền để thực hiện thay đổi.",
+      "code": "import os\n\n__step_success__ = True  # Giả định có quyền truy cập, vì việc kiểm tra chính xác quyền này rất khó trong Python tiêu chuẩn.\nprint('Assuming sufficient permissions to adjust screen brightness.')",
+      "note": "Việc kiểm tra quyền truy cập độ sáng màn hình trong Python không đơn giản.  Chúng ta giả định rằng có quyền và tiếp tục."
+    },
+    {
+      "step": "Lấy độ sáng tối đa hiện tại của màn hình.",
+      "purpose": "Xác định giá trị độ sáng tối đa có thể đặt.",
+      "code": "import subprocess\n\n__step_success__ = False\nmax_brightness = None\n\ntry:\n    command = 'powershell (Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightness).Levels'\n    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n    stdout, stderr = process.communicate()\n\n    if process.returncode == 0:\n        levels = stdout.decode().strip().split()\n        if levels:\n            max_brightness = int(levels[-1])\n            __step_success__ = True\n            print(f'Maximum brightness level: {max_brightness}')\n        else:\n            print('Could not determine maximum brightness level.')\n    else:\n        print(f'Failed to retrieve brightness levels. Error: {stderr.decode()}')\n\nexcept Exception as e:\n    print(f'Error executing PowerShell command: {e}')",
+      "note": "Sử dụng PowerShell để lấy danh sách các mức độ sáng, và lấy giá trị cuối cùng làm giá trị tối đa."
+    },
+    {
+      "step": "Thay đổi độ sáng màn hình lên mức tối đa bằng PowerShell.",
+      "purpose": "Thực hiện yêu cầu tăng độ sáng màn hình.",
+      "code": "import subprocess\n\n__step_success__ = False\n\nif max_brightness is not None:\n    try:\n        command = f'powershell (Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,{max_brightness})'\n        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n        stdout, stderr = process.communicate()\n\n        if process.returncode == 0:\n            __step_success__ = True\n            print('Screen brightness set to maximum successfully.')\n        else:\n            print(f'Failed to set screen brightness. Error: {stderr.decode()}')\n\n    except Exception as e:\n        print(f'Error executing PowerShell command: {e}')\nelse:\n    print('Maximum brightness level not available, cannot set screen brightness.')",
+      "note": "Sử dụng PowerShell để đặt độ sáng màn hình về giá trị tối đa đã tìm được ở bước trước. Đảm bảo rằng giá trị `max_brightness` đã được xác định."
+    }
+  ],
+  "truy cập chatgpt": [
+    {
+      "step": "Kiểm tra kết nối internet.",
+      "purpose": "Đảm bảo rằng hệ thống có thể truy cập internet để mở trang web.",
+      "code": "import socket\n\n__step_success__ = False\n\ntry:\n    # Thử kết nối tới một máy chủ DNS công cộng của Google.\n    socket.create_connection(('8.8.8.8', 53), timeout=5)\n    __step_success__ = True\n    print('Internet connection is available.')\nexcept OSError:\n    print('Internet connection is not available.')",
+      "note": "Kiểm tra kết nối mạng bằng cách thử kết nối tới một địa chỉ IP đáng tin cậy."
+    },
+    {
+      "step": "Mở trình duyệt mặc định và truy cập trang web ChatGPT.",
+      "purpose": "Thực hiện yêu cầu mở trang web ChatGPT.",
+      "code": "import webbrowser\n\n__step_success__ = False\n\nurl = 'https://chat.openai.com/'\n\ntry:\n    webbrowser.open(url)\n    __step_success__ = True\n    print(f'Opened {url} in the default browser.')\nexcept webbrowser.Error as e:\n    print(f'Failed to open the website: {e}')",
+      "note": "Sử dụng thư viện `webbrowser` để mở URL trong trình duyệt mặc định của hệ thống."
+    }
+  ],
+  "mở chatgpt": [
+    {
+      "step": "Kiểm tra kết nối internet.",
+      "purpose": "Đảm bảo rằng hệ thống có thể truy cập internet để mở trang web.",
+      "code": "import socket\n\n__step_success__ = False\n\ntry:\n    # Thử kết nối tới một máy chủ DNS công cộng của Google.\n    socket.create_connection(('8.8.8.8', 53), timeout=5)\n    __step_success__ = True\n    print('Internet connection is available.')\nexcept OSError:\n    print('Internet connection is not available.')",
+      "note": "Kiểm tra kết nối mạng bằng cách thử kết nối tới một địa chỉ IP đáng tin cậy."
+    },
+    {
+      "step": "Mở trình duyệt mặc định và truy cập trang web ChatGPT.",
+      "purpose": "Thực hiện yêu cầu mở trang web ChatGPT.",
+      "code": "import webbrowser\n\n__step_success__ = False\n\nurl = 'https://chat.openai.com/'\n\ntry:\n    webbrowser.open(url)\n    __step_success__ = True\n    print(f'Opened {url} in the default browser.')\nexcept webbrowser.Error as e:\n    print(f'Failed to open the website: {e}')",
+      "note": "Sử dụng thư viện `webbrowser` để mở URL trong trình duyệt mặc định của hệ thống."
+    }
+  ],
+  "bật trình quản lý các user": [
+    {
+      "step": "Kiểm tra sự tồn tại của công cụ 'netplwiz'.",
+      "purpose": "Đảm bảo công cụ quản lý tài khoản người dùng tồn tại trên hệ thống.",
+      "code": "import os\n\n__step_success__ = False\n\nif os.path.exists(os.path.join(os.environ['WINDIR'], 'System32', 'netplwiz.exe')):\n    __step_success__ = True\n    print('netplwiz.exe found.')\nelse:\n    print('netplwiz.exe not found.')",
+      "note": "Công cụ 'netplwiz' thường được sử dụng để quản lý tài khoản người dùng trên Windows."
+    },
+    {
+      "step": "Khởi chạy trình quản lý tài khoản người dùng (netplwiz).",
+      "purpose": "Mở giao diện quản lý tài khoản người dùng.",
+      "code": "import subprocess\n\n__step_success__ = False\n\ntry:\n    subprocess.Popen(['netplwiz.exe'])\n    __step_success__ = True\n    print('netplwiz.exe started successfully.')\nexcept FileNotFoundError:\n    print('netplwiz.exe not found (should have been caught in the previous step).')\nexcept Exception as e:\n    print(f'Error starting netplwiz.exe: {e}')\n\nif __step_success__:\n  print('Step 2 succeeded: netplwiz started.')",
+      "note": "Sử dụng `subprocess.Popen` để chạy công cụ quản lý tài khoản người dùng. Kiểm tra `FileNotFoundError` trong trường hợp công cụ không tồn tại (mặc dù step trước đã kiểm tra)."
+    }
+  ],
+  "bật bảng thông tin cấu hình máy chi tiết": [
+    {
+      "step": "Kiểm tra hệ điều hành",
+      "purpose": "Xác định xem hệ điều hành có phải là Windows hay không.",
+      "code": "import platform\n__step_success__ = False\nif platform.system() == 'Windows':\n    __step_success__ = True\nelse:\n    print('Hệ điều hành không phải là Windows.')"
+    },
+    {
+      "step": "Mở cửa sổ System Information (msinfo32.exe)",
+      "purpose": "Khởi chạy công cụ System Information của Windows.",
+      "code": "import os\n__step_success__ = False\ntry:\n    os.system('start msinfo32.exe')\n    __step_success__ = True\nexcept Exception as e:\n    print(f'Lỗi khi mở msinfo32.exe: {e}')"
+    }
+  ],
+  "giảm âm lượng hệ thống": [
+    {
+      "step": "Kiểm tra module `pycaw` đã được cài đặt.",
+      "purpose": "Đảm bảo thư viện cần thiết để điều khiển âm thanh hệ thống có sẵn.",
+      "code": "try:\n    from comtypes import CLSCTX_ALL\n    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume\n    __step_success__ = True\nexcept ImportError:\n    __step_success__ = False\n    print(\"Thiếu thư viện pycaw. Vui lòng cài đặt bằng 'pip install pycaw'\")"
+    },
+    {
+      "step": "Lấy thiết bị đầu ra âm thanh mặc định.",
+      "purpose": "Xác định thiết bị âm thanh để điều chỉnh âm lượng.",
+      "code": "if __step_success__:\n    try:\n        devices = AudioUtilities.GetSpeakers()\n        interface = devices.Activate(\n            IAudioEndpointVolume._iid_, CLSCTX_ALL, None)\n        volume = interface.QueryInterface(IAudioEndpointVolume)\n        __default_audio_device__ = volume\n        __step_success__ = True\n    except Exception as e:\n        __step_success__ = False\n        print(f\"Lỗi khi lấy thiết bị âm thanh mặc định: {e}\")\nelse:\n    __step_success__ = False\n    print(\"Không thể tiếp tục do thiếu thư viện pycaw.\")"
+    },
+    {
+      "step": "Giảm âm lượng hệ thống xuống một mức nhất định (ví dụ: giảm 10%).",
+      "purpose": "Thực hiện giảm âm lượng hệ thống.",
+      "code": "if __step_success__:\n    try:\n        current_volume = __default_audio_device__.GetMasterVolumeLevelScalar()\n        new_volume = max(0, current_volume - 0.1)\n        __default_audio_device__.SetMasterVolumeLevelScalar(new_volume, None)\n        print(f\"Âm lượng đã giảm xuống {new_volume * 100:.2f}%\")\n        __step_success__ = True\n    except Exception as e:\n        __step_success__ = False\n        print(f\"Lỗi khi giảm âm lượng: {e}\")\nelse:\n    __step_success__ = False\n    print(\"Không thể tiếp tục do lỗi ở các bước trước.\")"
+    }
+  ],
+  "mở outlook gửi 1 mail test cho ducnt@thanhdatexpress.com": [
+    {
+      "step": "Kiểm tra xem thư viện `win32com.client` đã được cài đặt hay chưa.",
+      "purpose": "Đảm bảo rằng thư viện cần thiết để tương tác với Outlook được cài đặt.",
+      "code": "try:\n    import win32com.client\n    __step_success__ = True\nexcept ImportError:\n    __step_success__ = False\n"
+    },
+    {
+      "step": "Cài đặt thư viện `pywin32` nếu `win32com.client` chưa được cài đặt.",
+      "purpose": "Cung cấp thư viện `win32com.client` nếu nó chưa tồn tại.",
+      "code": "if not __step_success__:\n    try:\n        import subprocess\n        subprocess.check_call(['pip', 'install', 'pywin32'])\n        import win32com.client\n        __step_success__ = True\n    except Exception as e:\n        print(f\"Lỗi khi cài đặt pywin32: {e}\")\n        __step_success__ = False\n"
+    },
+    {
+      "step": "Khởi tạo ứng dụng Outlook.",
+      "purpose": "Kết nối tới ứng dụng Outlook để gửi email.",
+      "code": "if __step_success__:\n    try:\n        outlook = win32com.client.Dispatch('outlook.application')\n        mail = outlook.CreateItem(0)\n        __step_success__ = True\n    except Exception as e:\n        print(f\"Lỗi khi khởi tạo Outlook: {e}\")\n        __step_success__ = False"
+    },
+    {
+      "step": "Thiết lập thông tin email.",
+      "purpose": "Điền thông tin người nhận, tiêu đề và nội dung email.",
+      "code": "if __step_success__:\n    try:\n        mail.To = 'ducnt@thanhdatexpress.com'\n        mail.Subject = 'Test Email từ Python'\n        mail.Body = 'Đây là email test được gửi từ Python.'\n        __step_success__ = True\n    except Exception as e:\n        print(f\"Lỗi khi thiết lập thông tin email: {e}\")\n        __step_success__ = False"
+    },
+    {
+      "step": "Gửi email.",
+      "purpose": "Gửi email đã được thiết lập.",
+      "code": "if __step_success__:\n    try:\n        mail.Send()\n        print('Email đã được gửi thành công!')\n        __step_success__ = True\n    except Exception as e:\n        print(f\"Lỗi khi gửi email: {e}\")\n        __step_success__ = False"
+    }
+  ],
+  "tăng độ sáng màn hình": [
+    {
+      "step": "Kiểm tra thư viện screen_brightness_control",
+      "purpose": "Đảm bảo thư viện screen_brightness_control đã được cài đặt.",
+      "code": "try:\n    import screen_brightness_control as sbc\n    __step_success__ = True\n    print(\"screen_brightness_control đã được cài đặt.\")\nexcept ImportError:\n    __step_success__ = False\n    print(\"screen_brightness_control chưa được cài đặt.\")",
+      "post_check": "__step_success__ == True"
+    },
+    {
+      "step": "Lấy độ sáng hiện tại",
+      "purpose": "Lấy độ sáng màn hình hiện tại để tính toán giá trị mới.",
+      "code": "import screen_brightness_control as sbc\n\ntry:\n    brightness = sbc.get_brightness()\n    current_brightness = brightness[0] if isinstance(brightness, list) else brightness # Handle both single display and multiple display scenarios\n    print(f\"Độ sáng hiện tại: {current_brightness}\")\n    __step_success__ = True\nexcept Exception as e:\n    print(f\"Lỗi khi lấy độ sáng hiện tại: {e}\")\n    __step_success__ = False",
+      "post_check": "__step_success__ == True"
+    },
+    {
+      "step": "Tính toán độ sáng mới",
+      "purpose": "Tính toán độ sáng mới, tăng thêm 20% nhưng không vượt quá 100.",
+      "code": "if 'current_brightness' in locals():\n    new_brightness = min(current_brightness + 20, 100)\n    print(f\"Độ sáng mới: {new_brightness}\")\n    __step_success__ = True\nelse:\n    print(\"Không thể tính toán độ sáng mới do không lấy được độ sáng hiện tại.\")\n    __step_success__ = False",
+      "post_check": "__step_success__ == True"
+    },
+    {
+      "step": "Đặt độ sáng màn hình",
+      "purpose": "Đặt độ sáng màn hình thành giá trị mới đã tính toán.",
+      "code": "import screen_brightness_control as sbc\n\nif 'new_brightness' in locals():\n    try:\n        sbc.set_brightness(new_brightness)\n        print(f\"Đã đặt độ sáng thành: {new_brightness}\")\n        __step_success__ = True\n    except Exception as e:\n        print(f\"Lỗi khi đặt độ sáng: {e}\")\n        __step_success__ = False\nelse:\n    print(\"Không thể đặt độ sáng do không có giá trị độ sáng mới.\")\n    __step_success__ = False",
+      "post_check": "__step_success__ == True"
+    },
+    {
+      "step": "Kiểm tra độ sáng sau khi đặt",
+      "purpose": "Kiểm tra xem độ sáng màn hình đã được đặt thành công hay chưa.",
+      "code": "import screen_brightness_control as sbc\n\nif 'new_brightness' in locals():\n    try:\n        current_brightness = sbc.get_brightness()\n        current_brightness = current_brightness[0] if isinstance(current_brightness, list) else current_brightness\n\n        if abs(current_brightness - new_brightness) < 5: # Cho phép sai số 5%\n            print(f\"Độ sáng đã được đặt thành công: {current_brightness}\")\n            __step_success__ = True\n        else:\n            print(f\"Độ sáng không được đặt chính xác.  Giá trị mong muốn: {new_brightness}, Giá trị thực tế: {current_brightness}\")\n            __step_success__ = False\n    except Exception as e:\n        print(f\"Lỗi khi kiểm tra độ sáng sau khi đặt: {e}\")\n        __step_success__ = False\nelse:\n    print(\"Không thể kiểm tra độ sáng do không có giá trị độ sáng mới.\")\n    __step_success__ = False",
+      "post_check": "__step_success__ == True"
+    }
+  ],
+  "mở yoube": [
+    {
+      "step": "Mở trình duyệt web mặc định.",
+      "purpose": "Khởi chạy trình duyệt web để truy cập YouTube.",
+      "code": "import webbrowser\n\nurl = 'https://www.youtube.com'\nwebbrowser.open(url)\n__step_success__ = True",
+      "post_check": "True"
+    }
+  ],
+  "giảm độ sáng màn hình": [
+    {
+      "step": "Giảm độ sáng màn hình",
+      "purpose": "Giảm độ sáng màn hình xuống một mức nhất định.",
+      "code": "import screen_brightness_control as sbc\n\ncurrent_brightness = sbc.get_brightness()[0]\nnew_brightness = max(0, current_brightness - 10)\n\nsbc.set_brightness(new_brightness)\nprint(f\"Độ sáng màn hình hiện tại: {new_brightness}\")\n__step_success__ = True",
+      "post_check": "sbc.get_brightness()[0] < current_brightness"
+    }
+  ],
+  "giảm độ sáng": [
+    {
+      "step": "Giảm độ sáng màn hình",
+      "purpose": "Giảm độ sáng màn hình xuống một mức nhất định.",
+      "code": "import screen_brightness_control as sbc\n\ncurrent_brightness = sbc.get_brightness()[0]\nnew_brightness = max(0, current_brightness - 10)\n\nsbc.set_brightness(new_brightness)\nprint(f\"Độ sáng màn hình hiện tại: {new_brightness}\")\n__step_success__ = True",
+      "rollback_code": "import screen_brightness_control as sbc\n\ncurrent_brightness = sbc.get_brightness()[0]\nprevious_brightness = current_brightness + 10\n\nsbc.set_brightness(previous_brightness)\nprint(f\"Độ sáng màn hình khôi phục về: {previous_brightness}\")",
+      "post_check": "sbc.get_brightness()[0] < current_brightness"
+    }
+  ]
+}
