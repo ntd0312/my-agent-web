@@ -5,7 +5,7 @@ setlocal
 set "PROJECT_DIR=D:\Agent AI\Test"
 
 :: URL repository GitHub của bạn
-set "REPO_URL=https://github.com/your-username/your-repo-name.git"
+set "REPO_URL=https://github.com/ntd0312/my-agent-web.git"
 
 echo === Đang chuyển đến thư mục dự án ===
 cd /d "%PROJECT_DIR%"
